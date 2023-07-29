@@ -8,8 +8,6 @@ mode = "smart"
 # The necessary secrets are:
 # - SENTRY_DSN
 # - SENTRY_ENVIRONMENT
-# - LIBSQL_DB_URL
-# - LIBSQL_DB_AUTH_TOKEN
 # Run `echo <VALUE> | wrangler secret put <NAME>` for each of these
 
 # Variable bindings. These are arbitrary, plaintext strings (similar to environment variables)

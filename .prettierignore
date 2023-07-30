@@ -5,4 +5,7 @@ node_modules/
 *.vars
 
 # misc
+details.txt
+
+# prettier-only
 *.min.js

@@ -1,10 +1,14 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 import { Hono } from 'hono';
 import { sentry } from '@hono/sentry';
+import { serveStatic } from '@hono/node-server/serve-static';
+import { serve } from '@hono/node-server';
 
 import rootTemplate from './templates/rootTemplate';
 import parseService from './services/parseService';
 import urlTemplate from './templates/urlTemplate';
 
+/*
 export type Env = {
 	SENTRY_DSN: string;
 	SENTRY_ENVIRONMENT: string;
@@ -16,6 +20,17 @@ app.use('*', async (c, next) => {
 	const logging = sentry({ dsn: c.env.SENTRY_DSN, environment: c.env.SENTRY_ENVIRONMENT });
 	await logging(c, next);
 });
+
+*/
+
+const app = new Hono();
+
+app.use('/public/*', async (c, next) => {
+	console.log(`[${c.req.method}] ${c.req.url}`);
+	await next();
+});
+
+app.use('/public/*', serveStatic({ root: './' }));
 
 app.notFound((c) => c.json({ message: 'Not Found', ok: false }, 404));
 
@@ -32,4 +47,6 @@ app.post('/', async (c) => {
 	return c.html(html);
 });
 
-export default app;
+serve(app, (info) => {
+	console.log(`Listening on http://localhost:${info.port}`); // Listening on http://localhost:3000
+});

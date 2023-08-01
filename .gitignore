@@ -2,7 +2,7 @@
 node_modules/
 
 # environment
-*.vars
+.env
 
 # misc
 details.txt

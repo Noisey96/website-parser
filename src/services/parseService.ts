@@ -4,10 +4,20 @@ import { marked } from 'marked';
 import xss from 'xss';
 
 export default async function parseService(url: string) {
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+	marked.use({
+		mangle: false,
+		headerIds: false,
+	});
+
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
 	const markdown = await Parser.parse(url, {
 		contentType: 'markdown',
 	});
-	const html = xss(marked.parse(markdown.content));
-	return html;
+	console.log(markdown);
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+	const content = markdown.content as string;
+	const contentHtml = marked.parse(content);
+	// TBD - add title, author, date_published, lead_image_url, and excerpt to the HTML
+	const parsedHtml = xss(contentHtml);
+	return parsedHtml;
 }

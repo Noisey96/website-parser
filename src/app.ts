@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
+import 'dotenv/config';
 import { Hono } from 'hono';
 import { sentry } from '@hono/sentry';
 import { serveStatic } from '@hono/node-server/serve-static';
@@ -8,7 +9,6 @@ import rootTemplate from './templates/rootTemplate';
 import parseService from './services/parseService';
 import urlTemplate from './templates/urlTemplate';
 
-/*
 export type Env = {
 	SENTRY_DSN: string;
 	SENTRY_ENVIRONMENT: string;
@@ -17,17 +17,13 @@ export type Env = {
 const app = new Hono<{ Bindings: Env }>();
 
 app.use('*', async (c, next) => {
-	const logging = sentry({ dsn: c.env.SENTRY_DSN, environment: c.env.SENTRY_ENVIRONMENT });
-	await logging(c, next);
-});
-
-*/
-
-const app = new Hono();
-
-app.use('*', async (c, next) => {
 	console.log(`[${c.req.method}] ${c.req.url}`);
 	await next();
+});
+
+app.use('*', async (c, next) => {
+	const logging = sentry({ dsn: process.env.SENTRY_DSN, environment: process.env.SENTRY_ENVIRONMENT });
+	await logging(c, next);
 });
 
 app.use('/public/*', serveStatic({ root: './' }));

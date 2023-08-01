@@ -3,7 +3,8 @@
 	"version": "0.1.0",
 	"type": "module",
 	"scripts": {
-		"dev": "tsx src/app.ts",
+		"dev": "nodemon",
+		"start": "tsx src/app.ts",
 		"dev:css": "tailwindcss -i ./app/app.css -o ./public/app.css --watch",
 		"deploy": "tailwindcss -i ./app/app.css -o ./public/app.css --minify && tsx src/app.ts"
 	},
@@ -23,6 +24,7 @@
 		"@typescript-eslint/eslint-plugin": "^6.2.0",
 		"@typescript-eslint/parser": "^6.2.0",
 		"eslint": "^8.46.0",
+		"nodemon": "^3.0.1",
 		"prettier": "^3.0.0",
 		"prettier-plugin-tailwindcss": "^0.4.1",
 		"tailwindcss": "^3.3.3",

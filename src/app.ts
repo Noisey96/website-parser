@@ -25,7 +25,7 @@ app.use('*', async (c, next) => {
 
 const app = new Hono();
 
-app.use('/public/*', async (c, next) => {
+app.use('*', async (c, next) => {
 	console.log(`[${c.req.method}] ${c.req.url}`);
 	await next();
 });

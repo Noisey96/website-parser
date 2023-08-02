@@ -1,7 +1,6 @@
 // @ts-expect-error - no types
 import Parser from '@postlight/parser';
 import { marked } from 'marked';
-import xss from 'xss';
 
 export default async function parseService(url: string) {
 	marked.use({
@@ -18,6 +17,5 @@ export default async function parseService(url: string) {
 	const content = markdown.content as string;
 	const contentHtml = marked.parse(content);
 	// TBD - add title, author, date_published, lead_image_url, and excerpt to the HTML
-	const parsedHtml = xss(contentHtml);
-	return parsedHtml;
+	return contentHtml;
 }

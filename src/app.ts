@@ -4,9 +4,12 @@ import { Hono } from 'hono';
 import { sentry } from '@hono/sentry';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { serve } from '@hono/node-server';
+import { z } from 'zod';
 
-import rootTemplate from './templates/rootTemplate';
 import parseService from './services/parseService';
+import rootTemplate from './templates/rootTemplate';
+import formTemplate from './templates/formTemplate';
+import errorTemplate from './templates/errorTemplate';
 import urlTemplate from './templates/urlTemplate';
 
 export type Env = {
@@ -38,9 +41,21 @@ app.get('/', (c) => {
 app.post('/', async (c) => {
 	const body = await c.req.parseBody();
 	const url = body.url as string;
-	const parsedHtml = await parseService(url);
-	const html = urlTemplate(parsedHtml);
-	return c.html(html);
+	try {
+		z.string().url().parse(url);
+	} catch (_) {
+		const html = formTemplate('Please enter a URL');
+		return c.html(html);
+	}
+
+	try {
+		const parsedHtml = await parseService(url);
+		const html = urlTemplate(parsedHtml);
+		return c.html(html);
+	} catch (_) {
+		const html = errorTemplate(`Cannot parse ${url}`);
+		return c.html(html);
+	}
 });
 
 serve(app, (info) => {

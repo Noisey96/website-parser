@@ -1,4 +1,6 @@
-import { html } from 'hono/html';
+import { html, raw } from 'hono/html';
+
+import formTemplate from './formTemplate';
 
 const rootTemplate = html`<!doctype html>
 	<html lang="en">
@@ -12,10 +14,7 @@ const rootTemplate = html`<!doctype html>
 		</head>
 		<body>
 			<h1>Website Parser</h1>
-			<form hx-post="/" hx-target="this" hx-swap="outerHTML">
-				<input type="text" id="url" name="url" placeholder="Enter a URL" />
-				<button>Submit</button>
-			</form>
+			${raw(formTemplate())}
 		</body>
 	</html>`;
 

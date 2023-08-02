@@ -11,9 +11,6 @@ dependencies:
   '@hono/sentry':
     specifier: ^0.2.1
     version: 0.2.1(hono@3.3.4)
-  '@hono/zod-validator':
-    specifier: ^0.1.3
-    version: 0.1.3(hono@3.3.4)(zod@3.21.4)
   '@postlight/parser':
     specifier: ^2.2.3
     version: 2.2.3
@@ -353,16 +350,6 @@ packages:
     dependencies:
       hono: 3.3.4
       toucan-js: 2.7.0
-    dev: false
-
-  /@hono/zod-validator@0.1.3(hono@3.3.4)(zod@3.21.4):
-    resolution: {integrity: sha512-g6dnqmkehV6VHjemJoWYwWqD/YwAl8awNJR2fxL8bqvPiYPvShycRZDrdHSpobgX61kaBc4n8mt0YJSHYvKbFQ==}
-    peerDependencies:
-      hono: 3.*
-      zod: ^3.19.1
-    dependencies:
-      hono: 3.3.4
-      zod: 3.21.4
     dev: false
 
   /@humanwhocodes/config-array@0.11.10:

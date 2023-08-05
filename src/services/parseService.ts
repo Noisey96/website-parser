@@ -9,17 +9,40 @@ export default async function parseService(url: string) {
 	});
 
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-	const markdown = await Parser.parse(url, {
+	const markdown = (await Parser.parse(url, {
 		contentType: 'markdown',
-	});
+	})) as {
+		author: string | null;
+		content: string;
+		date_published: string | null;
+		dek: string | null;
+		direction: string;
+		domain: string;
+		excerpt: string | null;
+		lead_image_url: string | null;
+		next_page_url: string | null;
+		rendered_pages: number;
+		title: string;
+		total_pages: number;
+		url: string;
+		word_count: number;
+	};
 
 	// const markdown = testData;
 
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-	const content = markdown.content as string;
+	const content = markdown.content;
 	const contentHtml = marked.parse(content);
-	// TBD - add title, author, date_published, lead_image_url, and excerpt to the HTML
-	return contentHtml;
+
+	let html = '';
+	if (markdown.lead_image_url) html += `<img src="${markdown.lead_image_url}" alt="${markdown.lead_image_url}" />`;
+	html += `<h2>${markdown.title}</h2>`;
+	if (markdown.excerpt) html += `<p>${markdown.excerpt}</p>`;
+	if (markdown.author) html += `<h3>${markdown.author}</h3>`;
+	if (markdown.date_published) html += `<h4>${markdown.date_published}</h4>`;
+	html += contentHtml;
+
+	return html;
 }
 
 const testData = {

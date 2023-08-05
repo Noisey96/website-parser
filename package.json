@@ -5,8 +5,8 @@
 	"scripts": {
 		"dev": "nodemon",
 		"start": "tsx src/app.ts",
-		"dev:css": "tailwindcss -i ./app/app.css -o ./public/app.css --watch",
-		"deploy": "tailwindcss -i ./app/app.css -o ./public/app.css --minify && tsx src/app.ts"
+		"dev:css": "postcss ./src/app.css -o ./public/app.css --watch",
+		"deploy": "postcss ./src/app.css -o ./public/app.css"
 	},
 	"dependencies": {
 		"@hono/node-server": "^1.1.1",
@@ -19,11 +19,16 @@
 		"zod": "^3.21.4"
 	},
 	"devDependencies": {
+		"@tailwindcss/typography": "^0.5.9",
 		"@types/node": "^20.4.5",
 		"@typescript-eslint/eslint-plugin": "^6.2.0",
 		"@typescript-eslint/parser": "^6.2.0",
+		"autoprefixer": "^10.4.14",
+		"cssnano": "^6.0.1",
 		"eslint": "^8.46.0",
 		"nodemon": "^3.0.1",
+		"postcss": "^8.4.27",
+		"postcss-cli": "^10.1.0",
 		"prettier": "^3.0.0",
 		"prettier-plugin-tailwindcss": "^0.4.1",
 		"tailwindcss": "^3.3.3",

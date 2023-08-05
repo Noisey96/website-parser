@@ -11,12 +11,12 @@ const rootTemplate = html`<!doctype html>
 			<script src="/public/_hyperscript.min.js"></script>
 			<link rel="stylesheet" href="/public/app.css" />
 		</head>
-		<body>
-			<h1>Website Parser</h1>
-			<form hx-post="/" hx-target="this" hx-swap="outerHTML">
+		<body class="flex min-h-screen flex-col items-center justify-center font-body">
+			<h1 class="font-title text-5xl">Website Parser</h1>
+			<form hx-post="/" hx-target="this" hx-swap="outerHTML" class="flex flex-col items-center text-lg">
 				<label for="url">Enter a URL</label>
 				<input type="text" id="url" name="url" placeholder="https://www.example.com" />
-				<p style="display: none;">Invalid URL</p>
+				<div style="display: none;">Invalid URL</div>
 				<button>Submit</button>
 			</form>
 		</body>

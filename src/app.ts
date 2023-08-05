@@ -13,7 +13,7 @@ import urlTemplate from './templates/urlTemplate';
 
 export type Env = {
 	SENTRY_DSN: string;
-	SENTRY_ENVIRONMENT: string;
+	ENVIRONMENT: string;
 };
 
 const app = new Hono<{ Bindings: Env }>();
@@ -24,7 +24,7 @@ app.use('*', async (c, next) => {
 });
 
 app.use('*', async (c, next) => {
-	const logging = sentry({ dsn: process.env.SENTRY_DSN, environment: process.env.SENTRY_ENVIRONMENT });
+	const logging = sentry({ dsn: process.env.SENTRY_DSN, environment: process.env.ENVIRONMENT });
 	await logging(c, next);
 });
 

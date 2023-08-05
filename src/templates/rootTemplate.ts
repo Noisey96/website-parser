@@ -17,7 +17,9 @@ const rootTemplate = html`<!doctype html>
 				<label for="url">Enter a URL</label>
 				<input type="text" id="url" name="url" placeholder="https://www.example.com" />
 				<div style="display: none;">Invalid URL</div>
-				<button>Submit</button>
+				<button class="rounded bg-indigo-500 text-white hover:bg-indigo-600 active:bg-indigo-700">
+					Submit <img class="htmx-indicator" src="/public/loader.svg" />
+				</button>
 			</form>
 		</body>
 	</html>`;

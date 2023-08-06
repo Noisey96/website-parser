@@ -28,18 +28,18 @@ export default async function parseService(url: string) {
 		word_count: number;
 	};
 
-	// const markdown = testData;
-
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 	const content = markdown.content;
 	const contentHtml = marked.parse(content);
 
 	let html = '';
-	if (markdown.lead_image_url) html += `<img src="${markdown.lead_image_url}" alt="${markdown.lead_image_url}" />`;
 	html += `<h2>${markdown.title}</h2>`;
-	if (markdown.excerpt) html += `<p>${markdown.excerpt}</p>`;
-	if (markdown.author) html += `<h3>${markdown.author}</h3>`;
-	if (markdown.date_published) html += `<h4>${markdown.date_published}</h4>`;
+	if (markdown.excerpt) html += `<em>${markdown.excerpt}</em>`;
+	if (markdown.author && markdown.date_published)
+		html += `<h3>By ${markdown.author} on ${new Date(markdown.date_published).toLocaleDateString()}</h3>`;
+	else if (markdown.author) html += `<h3>By ${markdown.author}</h3>`;
+	else if (markdown.date_published) html += `<h4>On ${new Date(markdown.date_published).toLocaleDateString()}</h4>`;
+	if (markdown.lead_image_url) html += `<img src="${markdown.lead_image_url}" alt="${markdown.lead_image_url}" />`;
 	html += contentHtml;
 
 	return html;

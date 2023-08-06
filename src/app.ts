@@ -5,11 +5,11 @@ import { sentry } from '@hono/sentry';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { serve } from '@hono/node-server';
 import { z } from 'zod';
-import { HTTPException } from 'hono/http-exception';
 
 import parseService from './services/parseService';
 import rootTemplate from './templates/rootTemplate';
 import urlTemplate from './templates/urlTemplate';
+import errorTemplate from './templates/errorTemplate';
 
 export type Env = {
 	SENTRY_DSN: string;
@@ -43,7 +43,8 @@ app.post('/', async (c) => {
 	try {
 		z.string().url().parse(url);
 	} catch (_) {
-		throw new HTTPException(400, { message: 'Invalid URL' });
+		const html = errorTemplate('Failed to parse URL');
+		return c.html(html);
 	}
 
 	try {
@@ -51,7 +52,8 @@ app.post('/', async (c) => {
 		const html = urlTemplate(parsedHtml);
 		return c.html(html);
 	} catch (_) {
-		throw new HTTPException(500, { message: 'Failed to parse URL' });
+		const html = errorTemplate('Failed to parse URL');
+		return c.html(html);
 	}
 });
 

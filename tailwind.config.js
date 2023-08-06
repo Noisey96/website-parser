@@ -1,3 +1,4 @@
+import defaultTheme from 'tailwindcss/defaultTheme';
 import tailwindcssTypography from '@tailwindcss/typography';
 
 export default {
@@ -21,6 +22,10 @@ export default {
 				'Segoe UI Symbol',
 				'Noto Color Emoji',
 			],
+		},
+		screens: {
+			xs: '475px',
+			...defaultTheme.screens,
 		},
 	},
 	plugins: [tailwindcssTypography],

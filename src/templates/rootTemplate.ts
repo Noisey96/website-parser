@@ -11,16 +11,25 @@ const rootTemplate = html`<!doctype html>
 			<script src="/public/_hyperscript.min.js"></script>
 			<link rel="stylesheet" href="/public/app.css" />
 		</head>
-		<body class="flex min-h-screen flex-col items-center justify-center font-body">
-			<h1 class="font-title text-5xl">Website Parser</h1>
-			<form hx-post="/" hx-target="this" hx-swap="outerHTML" class="flex flex-col items-center text-lg">
-				<label for="url">Enter a URL</label>
-				<input type="text" id="url" name="url" placeholder="https://www.example.com" />
-				<div style="display: none;">Invalid URL</div>
-				<button class="rounded bg-indigo-500 text-white hover:bg-indigo-600 active:bg-indigo-700">
-					Submit <img class="htmx-indicator" src="/public/loader.svg" />
-				</button>
-			</form>
+		<body class="flex min-h-screen flex-col items-center justify-center bg-gray-300 font-body">
+			<div class="m-2 flex flex-col rounded bg-white p-4">
+				<h1 class="p-1 text-center font-title text-4xl font-bold text-green-700 xs:text-5xl">Website Parser</h1>
+				<form hx-post="/" hx-target="this" hx-swap="outerHTML" class="text-md flex flex-col xs:text-lg">
+					<label for="url" class="mb-2">Enter a URL</label>
+					<input
+						type="text"
+						id="url"
+						name="url"
+						placeholder="https://www.example.com"
+						class="mb-2 w-full rounded border border-black p-1"
+					/>
+					<button
+						class="flex max-w-max rounded bg-blue-500 p-2 text-white hover:bg-blue-600 active:bg-blue-700"
+					>
+						Submit
+					</button>
+				</form>
+			</div>
 		</body>
 	</html>`;
 

@@ -2,7 +2,7 @@ import { html, raw } from 'hono/html';
 import xss from 'xss';
 
 export default function errorTemplate(parsedHtml: string) {
-	return html`<div class="font-bold">${raw(xss(parsedHtml))}</div>
+	return html`<div class="text-md font-bold xs:text-lg">${raw(xss(parsedHtml))}</div>
 		<button
 			hx-get="/"
 			hx-target="closest body"

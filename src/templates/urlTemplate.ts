@@ -2,7 +2,7 @@ import { html, raw } from 'hono/html';
 import xss from 'xss';
 
 export default function urlTemplate(parsedHtml: string) {
-	return html` <article class="prose">${raw(xss(parsedHtml))}</article>
+	return html` <article class="prose prose-a:text-blue-600">${raw(xss(parsedHtml))}</article>
 		<button
 			hx-get="/"
 			hx-target="closest body"

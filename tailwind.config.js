@@ -1,4 +1,5 @@
 import defaultTheme from 'tailwindcss/defaultTheme';
+import tailwindForms from '@tailwindcss/forms';
 import tailwindcssTypography from '@tailwindcss/typography';
 
 export default {
@@ -28,5 +29,5 @@ export default {
 			...defaultTheme.screens,
 		},
 	},
-	plugins: [tailwindcssTypography],
+	plugins: [tailwindForms, tailwindcssTypography],
 };

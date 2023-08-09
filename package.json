@@ -2,6 +2,9 @@
 	"name": "website-parser",
 	"version": "0.1.0",
 	"type": "module",
+	"engines": {
+		"node": ">=18.0.0"
+	},
 	"scripts": {
 		"dev": "nodemon",
 		"start": "tsx src/app.ts",

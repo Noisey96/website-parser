@@ -6,7 +6,7 @@
 		"dev": "nodemon",
 		"start": "tsx src/app.ts",
 		"dev:css": "postcss ./src/app.css -o ./public/app.css --watch",
-		"deploy": "postcss ./src/app.css -o ./public/app.css"
+		"deploy": "postcss ./src/app.css -o ./public/app.css && tsx src/app.ts"
 	},
 	"dependencies": {
 		"@hono/node-server": "^1.1.1",

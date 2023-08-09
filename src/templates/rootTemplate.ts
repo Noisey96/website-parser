@@ -10,6 +10,7 @@ const rootTemplate = html`<!doctype html>
 			<script src="/public/htmx.min.js"></script>
 			<script src="/public/loading-states.js"></script>
 			<link rel="stylesheet" href="/public/app.css" />
+			<link rel="icon" href="/public/favicon.ico" />
 		</head>
 		<body
 			hx-ext="loading-states"

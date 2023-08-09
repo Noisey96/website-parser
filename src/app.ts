@@ -57,6 +57,6 @@ app.post('/', async (c) => {
 	}
 });
 
-serve(app, (info) => {
+serve({ fetch: app.fetch, port: Number(process.env.PORT) }, (info) => {
 	console.log(`Listening on http://localhost:${info.port}`); // Listening on http://localhost:3000
 });

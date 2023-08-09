@@ -6,10 +6,10 @@ import { serveStatic } from '@hono/node-server/serve-static';
 import { serve } from '@hono/node-server';
 import { z } from 'zod';
 
-import parseService from './services/parseService';
-import rootTemplate from './templates/rootTemplate';
-import urlTemplate from './templates/urlTemplate';
-import errorTemplate from './templates/errorTemplate';
+import parseService from './services/parseService.js';
+import rootTemplate from './templates/rootTemplate.js';
+import urlTemplate from './templates/urlTemplate.js';
+import errorTemplate from './templates/errorTemplate.js';
 
 export type Env = {
 	SENTRY_DSN: string;

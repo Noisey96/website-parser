@@ -29,6 +29,7 @@ app.use('*', async (c, next) => {
 });
 
 app.use('/public/*', serveStatic({ root: './' }));
+app.use('/robots.txt', serveStatic({ root: './', rewriteRequestPath: () => '/public/robots.txt' }));
 
 app.notFound((c) => c.json({ message: 'Not Found', ok: false }, 404));
 

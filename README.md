@@ -11,12 +11,15 @@ Behind the scenes, the application is a [Hono](https://hono.dev/) server that se
 Here is the workflow to the website.
 
 1. Enter a URL complete with a protocol.
+   <br>
    <img alt="Home page with a URL entered in" src="https://utfs.io/f/b6d60155-43ef-4d42-ad37-8aa8afca0080_demo-1.png">
 
 2. Either you receive an error where you can click Back to go back home...
+   <br>
    <img alt="Error page with a back button" src="https://utfs.io/f/5d4a235e-043b-47aa-b38f-7511a54e5034_demo-2.png">
 
 3. Or you receive the contents to the inputted URL where you can click Back to go back home.
+   <br>
    <img alt="Page showing the inputted URL's contents with a back button" src="https://utfs.io/f/79ca2e76-0a3c-4fba-87c3-0b0cb5710017_demo-3.png">
 
 ## How can I recreate this website?
@@ -27,15 +30,15 @@ Here is the workflow to the website.
 
 ## Where will this go?
 
-Honestly, this website is almost done. However, there are a couple ways I could improve the website. At the moment, the Parse button becomes transparent when the inputted website is being parsed. Preferably, the Parse button could use a spinner to better convey to the user that something is happening behind the scenes. Also, the website has not been optimized to be accessible. Therefore, there are accessibility minded changes to be had.
+Honestly, this website is almost done. However, there are a couple of ways I could improve the website. At the moment, the Parse button becomes transparent when it is parsing the inputted website. Preferably, the Parse button could use a spinner when parsing the inputted website to better convey to the user that something is happening behind the scenes. Also, the website is not accessible. There are changes to be made to make the website accessible.
 
 ## Credits
 
 For this website, here are the resources and tools I used the most:
 
-1. [Hono](https://hono.dev/)
-2. [Hono + htmx + Cloudflare is a new stack](https://blog.yusu.ke/hono-htmx-cloudflare/)
-3. [HTMX](https://htmx.org/)
-4. [Postlight/Parser](https://www.npmjs.com/package/@postlight/parser)
-5. [Tailwind CSS](https://tailwindcss.com/)
-6. [TypeScript](https://www.typescriptlang.org/)
+-   [Hono](https://hono.dev/)
+-   [Hono + htmx + Cloudflare is a new stack](https://blog.yusu.ke/hono-htmx-cloudflare/)
+-   [HTMX](https://htmx.org/)
+-   [Postlight/Parser](https://www.npmjs.com/package/@postlight/parser)
+-   [Tailwind CSS](https://tailwindcss.com/)
+-   [TypeScript](https://www.typescriptlang.org/)

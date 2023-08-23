@@ -30,7 +30,7 @@ Here is the workflow to the website.
 
 ## Where will this go?
 
-Honestly, this website is almost done. However, there are a couple of ways I could improve the website. At the moment, the Parse button becomes transparent when it is parsing the inputted website. Preferably, the Parse button could use a spinner when parsing the inputted website to better convey to the user that something is happening behind the scenes. Also, the website is not accessible. There are changes to be made to make the website accessible.
+Honestly, this website is almost done. At the moment, the website is not accessible. There are changes to be made to make the website accessible.
 
 ## Credits
 

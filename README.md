@@ -25,7 +25,7 @@ Here is the workflow to the website.
 ## How can I recreate this website?
 
 1. Clone the repo.
-2. Run _npm run install_.
+2. Run _pnpm install_.
 3. Setup a project with [Sentry](https://sentry.io/) and add its DSN to an .env file.
 
 ## Where will this go?

@@ -40,9 +40,10 @@ const rootTemplate = html`<!doctype html>
 					<button
 						id="submit"
 						data-loading-disable
-						class="flex max-w-max rounded bg-blue-500 p-2 text-white enabled:hover:bg-blue-600 enabled:focus:bg-blue-600 enabled:active:bg-blue-700 disabled:opacity-50"
+						class="flex max-w-max items-center rounded bg-blue-500 p-2 text-white enabled:hover:bg-blue-600 enabled:focus:bg-blue-600 enabled:active:bg-blue-700 disabled:opacity-50"
 					>
 						Submit
+						<img src="/public/spinner.svg" data-loading class="ml-2 hidden h-5 w-5" />
 					</button>
 					<script>
 						htmx.onLoad(function (evt) {

@@ -28,19 +28,12 @@ app.use('*', async (c, next) => {
 	await logging(c, next);
 });
 
-app.use('/public/*', async (c, next) => {
-	c.header('Accept-Encoding', 'br, gzip');
-	c.header('Vary', 'Accept-Encoding');
-	await next();
-});
 app.use('/public/*', serveStatic({ root: './' }));
 app.use('/robots.txt', serveStatic({ root: './', rewriteRequestPath: () => '/public/robots.txt' }));
 
 app.notFound((c) => c.json({ message: 'Not Found', ok: false }, 404));
 
 app.get('/', (c) => {
-	c.header('Accept-Encoding', 'br, gzip');
-	c.header('Vary', 'Accept-Encoding');
 	const html = rootTemplate;
 	return c.html(html);
 });
@@ -51,22 +44,16 @@ app.post('/', async (c) => {
 	try {
 		z.string().url().parse(url);
 	} catch (_) {
-		c.header('Accept-Encoding', 'br, gzip');
-		c.header('Vary', 'Accept-Encoding');
 		const html = errorTemplate('Failed to parse URL');
 		return c.html(html);
 	}
 
 	try {
 		const parsedHtml = await parseService(url);
-		c.header('Accept-Encoding', 'br, gzip');
-		c.header('Vary', 'Accept-Encoding');
 		const html = urlTemplate(parsedHtml);
 		return c.html(html);
 	} catch (_) {
 		const html = errorTemplate('Failed to parse URL');
-		c.header('Accept-Encoding', 'br, gzip');
-		c.header('Vary', 'Accept-Encoding');
 		return c.html(html);
 	}
 });

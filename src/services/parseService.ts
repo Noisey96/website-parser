@@ -3,11 +3,6 @@ import Parser from '@postlight/parser';
 import { marked } from 'marked';
 
 export default async function parseService(url: string) {
-	marked.use({
-		mangle: false,
-		headerIds: false,
-	});
-
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
 	const markdown = (await Parser.parse(url, {
 		contentType: 'markdown',

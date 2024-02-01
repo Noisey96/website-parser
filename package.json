@@ -13,31 +13,31 @@
 		"deploy": "node dist/app.js"
 	},
 	"dependencies": {
-		"@hono/node-server": "^1.1.1",
-		"@hono/sentry": "^0.2.1",
+		"@hono/node-server": "^1.7.0",
+		"@hono/sentry": "^1.0.0",
 		"@postlight/parser": "^2.2.3",
-		"dotenv": "^16.3.1",
-		"hono": "^3.3.4",
-		"marked": "^6.0.0",
+		"dotenv": "^16.4.1",
+		"hono": "^3.12.9",
+		"marked": "^11.2.0",
 		"xss": "^1.0.14",
-		"zod": "^3.21.4"
+		"zod": "^3.22.4"
 	},
 	"devDependencies": {
-		"@tailwindcss/forms": "^0.5.4",
-		"@tailwindcss/typography": "^0.5.9",
-		"@types/node": "^20.4.5",
-		"@typescript-eslint/eslint-plugin": "^6.2.0",
-		"@typescript-eslint/parser": "^6.2.0",
-		"autoprefixer": "^10.4.14",
-		"cssnano": "^6.0.1",
-		"eslint": "^8.46.0",
-		"nodemon": "^3.0.1",
-		"postcss": "^8.4.27",
-		"postcss-cli": "^10.1.0",
-		"prettier": "^3.0.0",
-		"prettier-plugin-tailwindcss": "^0.4.1",
-		"tailwindcss": "^3.3.3",
-		"tsx": "^3.12.7",
-		"typescript": "^5.1.6"
+		"@tailwindcss/forms": "^0.5.7",
+		"@tailwindcss/typography": "^0.5.10",
+		"@types/node": "^20.11.14",
+		"@typescript-eslint/eslint-plugin": "^6.20.0",
+		"@typescript-eslint/parser": "^6.20.0",
+		"autoprefixer": "^10.4.17",
+		"cssnano": "^6.0.3",
+		"eslint": "^8.56.0",
+		"nodemon": "^3.0.3",
+		"postcss": "^8.4.33",
+		"postcss-cli": "^11.0.0",
+		"prettier": "^3.2.4",
+		"prettier-plugin-tailwindcss": "^0.5.11",
+		"tailwindcss": "^3.4.1",
+		"tsx": "^4.7.0",
+		"typescript": "^5.3.3"
 	}
 }

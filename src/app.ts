@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 import 'dotenv/config';
 import { Hono } from 'hono';
+import { compress } from 'hono/compress';
 import { sentry } from '@hono/sentry';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { serve } from '@hono/node-server';
@@ -17,6 +18,8 @@ export type Env = {
 };
 
 const app = new Hono<{ Bindings: Env }>();
+
+app.use(compress({ encoding: 'gzip' }));
 
 app.use('*', async (c, next) => {
 	console.log(`[${c.req.method}] ${c.req.url}`);

@@ -9,5 +9,11 @@ dist/
 # environment
 .env
 
+# database
+/db
+
+# testing
+/tests
+
 # misc
 details.txt

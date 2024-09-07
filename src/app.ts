@@ -86,7 +86,7 @@ app.post('/', async (c) => {
 		const id = createId();
 		const article = await parseArticle(url);
 		await db.execute({
-			sql: `INSERT INT articles (id, author, content, date_published, dek, direction, domain, excerpt, lead_image_url, next_page_url, rendered_pages, title, total_pages, url, word_count)
+			sql: `INSERT INTO articles (id, author, content, date_published, dek, direction, domain, excerpt, lead_image_url, next_page_url, rendered_pages, title, total_pages, url, word_count)
 					VALUES (:id, :author, :content, :date_published, :dek, :direction, :domain, :excerpt, :lead_image_url, :next_page_url, :rendered_pages, :title, :total_pages, :url, :word_count)`,
 			args: {
 				id: id,

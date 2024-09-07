@@ -39,8 +39,9 @@ type Article = {
 };
 
 const db = createClient({
-	url: 'file:tests/db/local.db',
-});
+	url: process.env.DATABASE_URL!,
+	authToken: process.env.DATABASE_AUTH_TOKEN,
+})
 
 Sentry.init({
 	dsn: process.env.SENTRY_DSN,
@@ -134,7 +135,7 @@ app.get('/article/:id', async (c) => {
 		delete article.id;
 		delete article.user_id;
 
-		const articleHtml = generateHtml(article as Article);
+		const articleHtml = generateHtml(article as unknown as Article);
 		const html = urlTemplate(articleHtml);
 		return c.html(html);
 	} catch (_) {

@@ -10,8 +10,11 @@
 		"start": "tsx src/app.ts",
 		"dev:css": "postcss ./src/app.css -o ./public/app.css --watch",
 		"dev:db": "turso dev --db-file db/local.db",
+		"db:generate": "drizzle-kit generate",
+		"db:migrate": "drizzle-kit migrate",
+		"db:studio": "drizzle-kit studio",
 		"build": "postcss ./src/app.css -o ./public/app.css && tsc",
-		"deploy": "node dist/app.js"
+		"deploy": "node dist/src/app.js"
 	},
 	"dependencies": {
 		"@hono/node-server": "^1.12.2",
@@ -21,6 +24,7 @@
 		"@postlight/parser": "^2.2.3",
 		"@sentry/node": "^8.28.0",
 		"dotenv": "^16.4.5",
+		"drizzle-orm": "^0.33.0",
 		"hono": "^4.5.11",
 		"marked": "^13.0.3",
 		"moment-timezone": "^0.5.45",
@@ -36,6 +40,7 @@
 		"@typescript-eslint/parser": "^8.4.0",
 		"autoprefixer": "^10.4.20",
 		"cssnano": "^7.0.6",
+		"drizzle-kit": "^0.24.2",
 		"eslint": "^9.10.0",
 		"nodemon": "^3.1.4",
 		"postcss": "^8.4.45",

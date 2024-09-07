@@ -8,6 +8,8 @@ import { serveStatic } from '@hono/node-server/serve-static';
 import { serve } from '@hono/node-server';
 import { z } from 'zod';
 import { createId } from '@paralleldrive/cuid2';
+import * as Sentry from '@sentry/node';
+import { libsqlIntegration } from 'sentry-integration-libsql-client';
 
 import { parseArticle, generateHtml } from './services/articleServices.js';
 import rootTemplate from './templates/rootTemplate.js';
@@ -38,6 +40,12 @@ type Article = {
 
 const db = createClient({
 	url: 'file:tests/db/local.db',
+});
+
+Sentry.init({
+	dsn: process.env.SENTRY_DSN,
+	environment: process.env.ENVIRONMENT,
+	integrations: [libsqlIntegration(db, Sentry)],
 });
 
 const app = new Hono<{ Bindings: Env }>();
@@ -78,7 +86,7 @@ app.post('/', async (c) => {
 		const id = createId();
 		const article = await parseArticle(url);
 		await db.execute({
-			sql: `INSERT INTO articles (id, author, content, date_published, dek, direction, domain, excerpt, lead_image_url, next_page_url, rendered_pages, title, total_pages, url, word_count)
+			sql: `INSERT INT articles (id, author, content, date_published, dek, direction, domain, excerpt, lead_image_url, next_page_url, rendered_pages, title, total_pages, url, word_count)
 					VALUES (:id, :author, :content, :date_published, :dek, :direction, :domain, :excerpt, :lead_image_url, :next_page_url, :rendered_pages, :title, :total_pages, :url, :word_count)`,
 			args: {
 				id: id,
@@ -136,6 +144,15 @@ app.get('/article/:id', async (c) => {
 });
 
 // TODO - POST request for article_id page for adding user_id to article
+app.post('/article/:id', async (c) => {
+	const id = c.req.param('id');
+	try {
+		z.string().cuid2().parse(id);
+	} catch (_) {
+		const html = errorTemplate('Failed to parse URL');
+		return c.html(html);
+	}
+});
 
 // TODO - POST request for auth page
 

@@ -8,13 +8,17 @@ import { compress } from 'hono/compress';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { serve } from '@hono/node-server';
 import { z } from 'zod';
-import { createId } from '@paralleldrive/cuid2';
+import { compare } from 'bcrypt';
+import { drizzle } from 'drizzle-orm/libsql';
+import { eq, sql } from 'drizzle-orm';
 
 import { parseArticle, generateHtml } from './articleServices.js';
 import rootTemplate from './templates/rootTemplate.js';
 import urlTemplate from './templates/urlTemplate.js';
 import errorTemplate from './templates/errorTemplate.js';
 import { authenticator, logger } from './middlewares.js';
+import { articles, SelectArticles, users, tokens } from '../db/dev/schema.js';
+import { generateEmailToken } from './authServices.js';
 
 // types
 type Article = {
@@ -40,6 +44,8 @@ const dbClient = createClient({
 	authToken: process.env.TURSO_AUTH_TOKEN,
 });
 
+const db = drizzle(dbClient);
+
 Sentry.init({
 	dsn: process.env.SENTRY_DSN,
 	environment: process.env.ENVIRONMENT,
@@ -58,7 +64,7 @@ app.use('*', logger());
 app.use('/robots.txt', serveStatic({ root: './', rewriteRequestPath: () => '/public/robots.txt' }));
 app.use('/public/*', serveStatic({ root: './' }));
 
-app.use('*', authenticator());
+//app.use('*', authenticator());
 
 // app routes
 app.notFound((c) => c.json({ message: 'Not Found', ok: false }, 404));
@@ -79,29 +85,8 @@ app.post('/', async (c) => {
 	}
 
 	try {
-		const id = createId();
 		const article = await parseArticle(url);
-		await dbClient.execute({
-			sql: `INSERT INTO articles (id, author, content, date_published, dek, direction, domain, excerpt, lead_image_url, next_page_url, rendered_pages, title, total_pages, url, word_count)
-					VALUES (:id, :author, :content, :date_published, :dek, :direction, :domain, :excerpt, :lead_image_url, :next_page_url, :rendered_pages, :title, :total_pages, :url, :word_count)`,
-			args: {
-				id: id,
-				author: article.author,
-				content: article.content,
-				date_published: article.date_published,
-				dek: article.dek,
-				direction: article.direction,
-				domain: article.domain,
-				excerpt: article.excerpt,
-				lead_image_url: article.lead_image_url,
-				next_page_url: article.next_page_url,
-				rendered_pages: article.rendered_pages,
-				title: article.title,
-				total_pages: article.total_pages,
-				url: article.url,
-				word_count: article.word_count,
-			},
-		});
+		const id = await db.insert(articles).values(article).returning({ id: articles.id });
 		return c.redirect('article/' + id);
 	} catch (_) {
 		const html = errorTemplate('Failed to parse content');
@@ -111,26 +96,18 @@ app.post('/', async (c) => {
 
 app.get('/article/:id', async (c) => {
 	const id = c.req.param('id');
-	let article;
+	let article: SelectArticles;
 	try {
 		z.string().cuid2().parse(id);
-		const rows = await dbClient.execute({
-			sql: 'SELECT * FROM articles WHERE id = :id',
-			args: {
-				id: id,
-			},
-		});
-
-		article = rows.rows[0];
+		const rows = await db.select().from(articles).where(eq(articles.id, id));
+		article = rows[0];
+		if (!article) throw new Error('Article not found');
 	} catch (_) {
 		return c.notFound();
 	}
 
 	try {
-		delete article.id;
-		delete article.user_id;
-
-		const articleHtml = generateHtml(article as unknown as Article);
+		const articleHtml = generateHtml(article as Article);
 		const html = urlTemplate(articleHtml);
 		return c.html(html);
 	} catch (_) {
@@ -153,29 +130,30 @@ app.post('/login', async (c) => {
 		z.string().email().parse(email);
 		z.string().parse(password);
 
-		const rows = await dbClient.execute({
-			sql: 'SELECT * FROM users WHERE email = :email',
-			args: {
-				email: email,
-			},
+		const rows = await db.select().from(users).where(eq(users.email, email));
+		const user = rows[0];
+		if (!user) throw new Error('Invalid email');
+
+		const passwordMatch = await compare(password, user.password);
+		if (!passwordMatch) throw new Error('Invalid password');
+
+		const emailToken = await generateEmailToken();
+		await db.insert(tokens).values({
+			user_id: user.id,
+			token_type: 'email',
+			token: emailToken.passcodeHash,
+			valid: 1,
+			expiration: sql`datetime(${emailToken.expiration})`,
 		});
-		const user = rows.rows[0];
-
-		// compare passwords
-
-		// generate passcode
-		let passcode = '123456';
-
-		// insert passcode into database
 
 		await emailClient.emails.send({
 			from: 'jlfreeman@freemanapps.org',
 			to: [email],
 			subject: 'Here is your one time passcode',
-			html: `<p>${passcode}</p>`,
+			html: `<p>${emailToken.passcode}</p>`,
 		});
 
-		// replace with HTML for login/validate form
+		// replace with HTML for login/validate form - TODO
 		return c.html('TODO');
 	} catch (_) {
 		const html = errorTemplate('Invalid user and/or password');

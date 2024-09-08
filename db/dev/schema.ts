@@ -41,28 +41,3 @@ export type InsertUsers = InferInsertModel<typeof users>;
 
 export type SelectArticles = InferSelectModel<typeof articles>;
 export type InsertArticles = InferInsertModel<typeof articles>;
-
-/*
-export const tokens = pgTable('tokens', {
-	id: uuid('id').defaultRandom().primaryKey(),
-	createdAt: timestamp('created_at').defaultNow(),
-	updatedAt: timestamp('updated_at').defaultNow(),
-
-	tokenType: text('token_type').notNull(),
-	emailToken: char('email_token', { length: 6 }),
-
-	valid: boolean('valid').default(true),
-	expiration: timestamp('expiration').notNull(),
-
-	userId: uuid('user_id')
-		.notNull()
-		.references(() => users.id),
-});
-
-export const tokensRelations = relations(tokens, ({ one }) => ({
-	user: one(users, {
-		fields: [tokens.userId],
-		references: [users.id],
-	}),
-}));
-*/

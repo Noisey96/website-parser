@@ -1,7 +1,7 @@
 import { html, raw } from 'hono/html';
 import xss from 'xss';
 
-export default function errorTemplate(parsedHtml: string) {
+export default function errorHTML(parsedHtml: string) {
 	return html`<div class="text-md font-bold xs:text-lg">${raw(xss(parsedHtml))}</div>
 		<button
 			hx-get="/"

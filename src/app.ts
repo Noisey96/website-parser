@@ -13,12 +13,15 @@ import { drizzle } from 'drizzle-orm/libsql';
 import { eq, sql } from 'drizzle-orm';
 
 import { parseArticle, generateHtml } from './articleServices.js';
-import rootTemplate from './templates/rootTemplate.js';
-import urlTemplate from './templates/urlTemplate.js';
-import errorTemplate from './templates/errorTemplate.js';
+import rootHTML from './templates/root.js';
+import urlHTML from './templates/url.js';
+import errorHTML from './templates/error.js';
+import parseUrlFormHTML from './templates/parseUrlForm.js';
+import loginFormHTML from './templates/loginForm.js';
 import { authenticator, logger } from './middlewares.js';
 import { articles, SelectArticles, users, tokens } from '../db/dev/schema.js';
 import { generateEmailToken } from './authServices.js';
+import validateLoginFormHTML from './templates/validateLoginForm.js';
 
 // types
 type Article = {
@@ -70,7 +73,7 @@ app.use('/public/*', serveStatic({ root: './' }));
 app.notFound((c) => c.json({ message: 'Not Found', ok: false }, 404));
 
 app.get('/', (c) => {
-	const html = rootTemplate;
+	const html = rootHTML(parseUrlFormHTML());
 	return c.html(html);
 });
 
@@ -80,16 +83,16 @@ app.post('/', async (c) => {
 	try {
 		z.string().url().parse(url);
 	} catch (_) {
-		const html = errorTemplate('Invalid URL');
+		const html = errorHTML('Invalid URL');
 		return c.html(html);
 	}
 
 	try {
 		const article = await parseArticle(url);
-		const id = await db.insert(articles).values(article).returning({ id: articles.id });
-		return c.redirect('article/' + id);
+		const ids = await db.insert(articles).values(article).returning({ id: articles.id });
+		return c.redirect('article/' + ids[0].id);
 	} catch (_) {
-		const html = errorTemplate('Failed to parse content');
+		const html = errorHTML('Failed to parse content');
 		return c.html(html);
 	}
 });
@@ -107,18 +110,24 @@ app.get('/article/:id', async (c) => {
 	}
 
 	try {
+		c.header('HX-Push-URL', '/article/' + id);
 		const articleHtml = generateHtml(article as Article);
-		const html = urlTemplate(articleHtml);
+		const html = urlHTML(articleHtml);
 		return c.html(html);
 	} catch (_) {
-		const html = errorTemplate('Failed to display content');
+		const html = errorHTML('Failed to display content');
 		return c.html(html);
 	}
 });
 
 app.get('/login', (c) => {
-	// TODO - return html template
-	return c.text('login');
+	try {
+		const html = rootHTML(loginFormHTML());
+		return c.html(html);
+	} catch (_) {
+		const html = errorHTML('Failed to display login form');
+		return c.html(html);
+	}
 });
 
 app.post('/login', async (c) => {
@@ -143,7 +152,8 @@ app.post('/login', async (c) => {
 			token_type: 'email',
 			token: emailToken.passcodeHash,
 			valid: 1,
-			expiration: sql`datetime(${emailToken.expiration})`,
+			expiration: 'test',
+			//expiration: sql`datetime(${emailToken.expiration})` - TODO,
 		});
 
 		await emailClient.emails.send({
@@ -153,10 +163,9 @@ app.post('/login', async (c) => {
 			html: `<p>${emailToken.passcode}</p>`,
 		});
 
-		// replace with HTML for login/validate form - TODO
-		return c.html('TODO');
+		return c.html(validateLoginFormHTML());
 	} catch (_) {
-		const html = errorTemplate('Invalid user and/or password');
+		const html = loginFormHTML('Invalid user and/or password');
 		return c.html(html);
 	}
 });

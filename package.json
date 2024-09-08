@@ -28,6 +28,7 @@
 		"hono": "^4.5.11",
 		"marked": "^13.0.3",
 		"moment-timezone": "^0.5.45",
+		"resend": "^4.0.0",
 		"sentry-integration-libsql-client": "^1.3.0",
 		"xss": "^1.0.15",
 		"zod": "^3.23.8"

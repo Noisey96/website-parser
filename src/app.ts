@@ -1,26 +1,22 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
 import 'dotenv/config';
 import { Hono } from 'hono';
 import { createClient } from '@libsql/client';
+import * as Sentry from '@sentry/node';
+import { libsqlIntegration } from 'sentry-integration-libsql-client';
+import { Resend } from 'resend';
 import { compress } from 'hono/compress';
-import { sentry } from '@hono/sentry';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { serve } from '@hono/node-server';
 import { z } from 'zod';
 import { createId } from '@paralleldrive/cuid2';
-import * as Sentry from '@sentry/node';
-import { libsqlIntegration } from 'sentry-integration-libsql-client';
 
-import { parseArticle, generateHtml } from './services/articleServices.js';
+import { parseArticle, generateHtml } from './articleServices.js';
 import rootTemplate from './templates/rootTemplate.js';
 import urlTemplate from './templates/urlTemplate.js';
 import errorTemplate from './templates/errorTemplate.js';
+import { authenticator, logger } from './middlewares.js';
 
-type Env = {
-	SENTRY_DSN: string;
-	ENVIRONMENT: string;
-};
-
+// types
 type Article = {
 	author: string | null;
 	content: string;
@@ -38,34 +34,33 @@ type Article = {
 	word_count: number;
 };
 
-const db = createClient({
-	url: process.env.DATABASE_URL!,
-	authToken: process.env.DATABASE_AUTH_TOKEN,
-})
+// pre-app setup
+const dbClient = createClient({
+	url: process.env.TURSO_URL!,
+	authToken: process.env.TURSO_AUTH_TOKEN,
+});
 
 Sentry.init({
 	dsn: process.env.SENTRY_DSN,
 	environment: process.env.ENVIRONMENT,
-	integrations: [libsqlIntegration(db, Sentry)],
+	integrations: [libsqlIntegration(dbClient, Sentry)],
 });
 
-const app = new Hono<{ Bindings: Env }>();
+const emailClient = new Resend(process.env.RESEND_API_KEY);
+
+// app setup
+const app = new Hono();
 
 app.use(compress({ encoding: 'gzip' }));
 
-app.use('*', async (c, next) => {
-	console.log(`[${c.req.method}] ${c.req.url}`);
-	await next();
-});
+app.use('*', logger());
 
-app.use('*', async (c, next) => {
-	const logging = sentry({ dsn: process.env.SENTRY_DSN, environment: process.env.ENVIRONMENT });
-	await logging(c, next);
-});
-
-app.use('/public/*', serveStatic({ root: './' }));
 app.use('/robots.txt', serveStatic({ root: './', rewriteRequestPath: () => '/public/robots.txt' }));
+app.use('/public/*', serveStatic({ root: './' }));
 
+app.use('*', authenticator());
+
+// app routes
 app.notFound((c) => c.json({ message: 'Not Found', ok: false }, 404));
 
 app.get('/', (c) => {
@@ -79,14 +74,14 @@ app.post('/', async (c) => {
 	try {
 		z.string().url().parse(url);
 	} catch (_) {
-		const html = errorTemplate('Failed to parse URL');
+		const html = errorTemplate('Invalid URL');
 		return c.html(html);
 	}
 
 	try {
 		const id = createId();
 		const article = await parseArticle(url);
-		await db.execute({
+		await dbClient.execute({
 			sql: `INSERT INTO articles (id, author, content, date_published, dek, direction, domain, excerpt, lead_image_url, next_page_url, rendered_pages, title, total_pages, url, word_count)
 					VALUES (:id, :author, :content, :date_published, :dek, :direction, :domain, :excerpt, :lead_image_url, :next_page_url, :rendered_pages, :title, :total_pages, :url, :word_count)`,
 			args: {
@@ -109,29 +104,29 @@ app.post('/', async (c) => {
 		});
 		return c.redirect('article/' + id);
 	} catch (_) {
-		const html = errorTemplate('Failed to parse URL');
+		const html = errorTemplate('Failed to parse content');
 		return c.html(html);
 	}
 });
 
 app.get('/article/:id', async (c) => {
 	const id = c.req.param('id');
+	let article;
 	try {
 		z.string().cuid2().parse(id);
-	} catch (_) {
-		const html = errorTemplate('Failed to parse URL');
-		return c.html(html);
-	}
-
-	try {
-		const rows = await db.execute({
+		const rows = await dbClient.execute({
 			sql: 'SELECT * FROM articles WHERE id = :id',
 			args: {
 				id: id,
 			},
 		});
 
-		const article = rows.rows[0];
+		article = rows.rows[0];
+	} catch (_) {
+		return c.notFound();
+	}
+
+	try {
 		delete article.id;
 		delete article.user_id;
 
@@ -139,26 +134,60 @@ app.get('/article/:id', async (c) => {
 		const html = urlTemplate(articleHtml);
 		return c.html(html);
 	} catch (_) {
-		const html = errorTemplate('Failed to parse URL');
+		const html = errorTemplate('Failed to display content');
 		return c.html(html);
 	}
 });
 
-// TODO - POST request for article_id page for adding user_id to article
-app.post('/article/:id', async (c) => {
-	const id = c.req.param('id');
+app.get('/login', (c) => {
+	// TODO - return html template
+	return c.text('login');
+});
+
+app.post('/login', async (c) => {
 	try {
-		z.string().cuid2().parse(id);
+		const body = await c.req.parseBody();
+		const email = body.email as string;
+		const password = body.password as string;
+
+		z.string().email().parse(email);
+		z.string().parse(password);
+
+		const rows = await dbClient.execute({
+			sql: 'SELECT * FROM users WHERE email = :email',
+			args: {
+				email: email,
+			},
+		});
+		const user = rows.rows[0];
+
+		// compare passwords
+
+		// generate passcode
+		let passcode = '123456';
+
+		// insert passcode into database
+
+		await emailClient.emails.send({
+			from: 'jlfreeman@freemanapps.org',
+			to: [email],
+			subject: 'Here is your one time passcode',
+			html: `<p>${passcode}</p>`,
+		});
+
+		// replace with HTML for login/validate form
+		return c.html('TODO');
 	} catch (_) {
-		const html = errorTemplate('Failed to parse URL');
+		const html = errorTemplate('Invalid user and/or password');
 		return c.html(html);
 	}
 });
 
-// TODO - POST request for auth page
+// TODO - POST request for login/validate page
 
-// for unauth, redirect for auth page; otherwise, do nothing
+// TODO - GET request for dashboard page
 
+// app deploy
 serve({ fetch: app.fetch, port: Number(process.env.PORT) }, (info) => {
 	console.log(`Listening on http://localhost:${info.port}`); // Listening on http://localhost:3000
 });

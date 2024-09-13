@@ -14,14 +14,19 @@ export const logger = () => {
 
 // fix this for article/login
 export const authenticator = () => {
-	return some(
-		(c) => {
-			return /\/public\w*/.test(c.req.path) || /\/login\w*/.test(c.req.path);
-		},
-		jwt({ secret: process.env.JWT_SECRET }),
-		async (c, next) => {
-			c.res = c.redirect('/login');
-			await next();
-		},
-	);
+	return createMiddleware(async (c, next) => {
+		c.set('user', { id: process.env.ID });
+		await next();
+	});
+
+	//return some(
+	//	(c) => {
+	//		return /\/public\w*/.test(c.req.path) || /\/login\w*/.test(c.req.path);
+	//	},
+	//	jwt({ secret: process.env.JWT_SECRET }),
+	//	async (c, next) => {
+	//		c.res = c.redirect('/login');
+	//		await next();
+	//	},
+	//);
 };

@@ -1,10 +1,10 @@
 import { html } from 'hono/html';
 
-export default function validateLoginFormHTML(error?: string) {
+export default function validateLoginFormHTML(id: string, error?: string) {
 	return html`<form
-		hx-post="/login/validate"
+		hx-post="/login/validate?id=${id}"
 		hx-target="this"
-		hx-swap="outerHTML"
+		hx-swap=""
 		class="text-md flex flex-col xs:text-lg"
 		novalidate
 	>

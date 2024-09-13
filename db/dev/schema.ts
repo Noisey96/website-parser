@@ -1,4 +1,4 @@
-import { text, blob, sqliteTable, integer } from 'drizzle-orm/sqlite-core';
+import { text, sqliteTable, integer } from 'drizzle-orm/sqlite-core';
 import { type InferSelectModel, type InferInsertModel } from 'drizzle-orm';
 import { createId } from '@paralleldrive/cuid2';
 
@@ -12,12 +12,12 @@ export const articles = sqliteTable('articles', {
 	id: text('id').primaryKey().$default(createId),
 	user_id: text('user_id').references(() => users.id),
 	author: text('author'),
-	content: blob('content'),
+	content: text('content'),
 	date_published: text('date_published'),
 	dek: text('dek'),
 	direction: text('direction'),
 	domain: text('domain'),
-	excerpt: blob('excerpt'),
+	excerpt: text('excerpt'),
 	lead_image_url: text('lead_image_url'),
 	next_page_url: text('next_page_url'),
 	rendered_pages: integer('rendered_pages'),

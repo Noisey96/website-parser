@@ -10,36 +10,19 @@ import { serve } from '@hono/node-server';
 import { z } from 'zod';
 import { compare } from 'bcrypt';
 import { drizzle } from 'drizzle-orm/libsql';
-import { eq, sql } from 'drizzle-orm';
+import { eq, and, gte } from 'drizzle-orm';
 
-import { parseArticle, generateHtml } from './articleServices.js';
+import { generateCardHtml, parseArticle } from './articleServices.js';
 import rootHTML from './templates/root.js';
-import urlHTML from './templates/url.js';
+import articleHTML from './templates/article.js';
 import errorHTML from './templates/error.js';
 import parseUrlFormHTML from './templates/parseUrlForm.js';
 import loginFormHTML from './templates/loginForm.js';
 import { authenticator, logger } from './middlewares.js';
 import { articles, SelectArticles, users, tokens } from '../db/dev/schema.js';
-import { generateEmailToken } from './authServices.js';
+import { generateEmailToken, generateAccessJWT, generateAccessJWTExpiration } from './authServices.js';
 import validateLoginFormHTML from './templates/validateLoginForm.js';
-
-// types
-type Article = {
-	author: string | null;
-	content: string;
-	date_published: string | null;
-	dek: string | null;
-	direction: string;
-	domain: string;
-	excerpt: string | null;
-	lead_image_url: string | null;
-	next_page_url: string | null;
-	rendered_pages: number;
-	title: string;
-	total_pages: number;
-	url: string;
-	word_count: number;
-};
+import dashboardHTML from './templates/dashboard.js';
 
 // pre-app setup
 const dbClient = createClient({
@@ -57,8 +40,12 @@ Sentry.init({
 
 const emailClient = new Resend(process.env.RESEND_API_KEY);
 
+type Variables = {
+	user: { id: string };
+};
+
 // app setup
-const app = new Hono();
+const app = new Hono<{ Variables: Variables }>();
 
 app.use(compress({ encoding: 'gzip' }));
 
@@ -67,14 +54,25 @@ app.use('*', logger());
 app.use('/robots.txt', serveStatic({ root: './', rewriteRequestPath: () => '/public/robots.txt' }));
 app.use('/public/*', serveStatic({ root: './' }));
 
-//app.use('*', authenticator());
+app.use('*', authenticator());
 
 // app routes
 app.notFound((c) => c.json({ message: 'Not Found', ok: false }, 404));
 
-app.get('/', (c) => {
-	const html = rootHTML(parseUrlFormHTML());
-	return c.html(html);
+app.get('/', async (c) => {
+	try {
+		const user = c.get('user');
+
+		const articleRows = await db.select().from(articles).where(eq(articles.user_id, user.id));
+
+		const articleCardHtmls = articleRows.map((article) => generateCardHtml(article));
+
+		const html = rootHTML(dashboardHTML(articleCardHtmls));
+		return c.html(html);
+	} catch (_) {
+		const html = errorHTML('Failed to load articles');
+		return c.html(html);
+	}
 });
 
 app.post('/', async (c) => {
@@ -111,8 +109,7 @@ app.get('/article/:id', async (c) => {
 
 	try {
 		c.header('HX-Push-URL', '/article/' + id);
-		const articleHtml = generateHtml(article as Article);
-		const html = urlHTML(articleHtml);
+		const html = articleHTML(article);
 		return c.html(html);
 	} catch (_) {
 		const html = errorHTML('Failed to display content');
@@ -141,7 +138,7 @@ app.post('/login', async (c) => {
 
 		const rows = await db.select().from(users).where(eq(users.email, email));
 		const user = rows[0];
-		if (!user) throw new Error('Invalid email');
+		if (!user) throw new Error('Non-existent user');
 
 		const passwordMatch = await compare(password, user.password);
 		if (!passwordMatch) throw new Error('Invalid password');
@@ -152,8 +149,7 @@ app.post('/login', async (c) => {
 			token_type: 'email',
 			token: emailToken.passcodeHash,
 			valid: 1,
-			expiration: 'test',
-			//expiration: sql`datetime(${emailToken.expiration})` - TODO,
+			expiration: emailToken.expiration.toISOString(),
 		});
 
 		await emailClient.emails.send({
@@ -163,14 +159,75 @@ app.post('/login', async (c) => {
 			html: `<p>${emailToken.passcode}</p>`,
 		});
 
-		return c.html(validateLoginFormHTML());
-	} catch (_) {
+		return c.redirect('login/validate?id=' + user.id);
+	} catch (e) {
 		const html = loginFormHTML('Invalid user and/or password');
 		return c.html(html);
 	}
 });
 
-// TODO - POST request for login/validate page
+app.get('/login/validate', (c) => {
+	try {
+		const id = c.req.query('id') as string;
+
+		z.string().cuid2().parse(id);
+
+		c.header('HX-Push-URL', '/login/validate?id=' + id);
+		const html = validateLoginFormHTML(id);
+		return c.html(html);
+	} catch (_) {
+		const html = errorHTML('Invalid email');
+		return c.html(html);
+	}
+});
+
+app.post('/login/validate', async (c) => {
+	const id = c.req.query('id') as string;
+	try {
+		const body = await c.req.parseBody();
+		const passcode = body.passcode as string;
+
+		z.string().cuid2().parse(id);
+		z.string().length(6).parse(passcode);
+
+		const now = new Date().toISOString();
+		const tokenRows = await db
+			.select()
+			.from(tokens)
+			.where(
+				and(
+					eq(tokens.user_id, id),
+					eq(tokens.token_type, 'email'),
+					eq(tokens.valid, 1),
+					gte(tokens.expiration, now),
+				),
+			);
+
+		const token = tokenRows.filter((t) => compare(t.token as string, passcode))[0];
+		if (!token) throw new Error('Non-existent passcode');
+
+		const expiration = generateAccessJWTExpiration();
+		const tokenIds = await db
+			.insert(tokens)
+			.values({
+				user_id: id,
+				token_type: 'access',
+				valid: 1,
+				expiration: expiration.toISOString(),
+			})
+			.returning({ id: tokens.id });
+
+		const accessToken = await generateAccessJWT(tokenIds[0].id, expiration);
+
+		c.header('Authorization', 'Bearer ' + accessToken);
+		c.header('HX-Redirect', '/');
+		return c.redirect('/');
+	} catch (e) {
+		console.log(e);
+		const html = validateLoginFormHTML(id, 'Invalid passcode');
+		return c.html(html);
+	}
+});
 
 // TODO - GET request for dashboard page
 

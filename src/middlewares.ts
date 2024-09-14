@@ -1,8 +1,15 @@
 import 'dotenv/config';
 import { createMiddleware } from 'hono/factory';
 import { sentry } from '@hono/sentry';
-import { jwt } from 'hono/jwt';
-import { some } from 'hono/combine';
+import { except } from 'hono/combine';
+import { getCookie } from 'hono/cookie';
+import { decode, verify } from 'hono/jwt';
+import { eq } from 'drizzle-orm';
+
+import { database } from './services/dbServices';
+import { tokens, users } from '../db/dev/schema';
+
+const db = database(false);
 
 export const logger = () => {
 	return createMiddleware(async (c, next) => {
@@ -12,21 +19,45 @@ export const logger = () => {
 	});
 };
 
-// fix this for article/login
 export const authenticator = () => {
-	return createMiddleware(async (c, next) => {
-		c.set('user', { id: process.env.ID });
-		await next();
-	});
+	return except(
+		(c) => /\/public\w*/.test(c.req.path) || /\/login\w*/.test(c.req.path),
+		createMiddleware(async (c, next) => {
+			try {
+				const authToken = getCookie(c, 'access_token');
 
-	//return some(
-	//	(c) => {
-	//		return /\/public\w*/.test(c.req.path) || /\/login\w*/.test(c.req.path);
-	//	},
-	//	jwt({ secret: process.env.JWT_SECRET }),
-	//	async (c, next) => {
-	//		c.res = c.redirect('/login');
-	//		await next();
-	//	},
-	//);
+				if (!authToken) throw new Error('No token');
+
+				// find token in DB
+				let { payload: authTokenPayload } = decode(authToken);
+				const tokenRows = await db
+					.select()
+					.from(tokens)
+					.where(eq(tokens.id, authTokenPayload.id as string));
+				const token = tokenRows[0];
+
+				// verify token against DB data
+				const now = new Date().toISOString();
+				if (token.token_type !== 'access' || !token.valid) {
+					throw new Error('Invalid token');
+				} else if (token.expiration < now) {
+					await db.update(tokens).set({ valid: 0 }).where(eq(tokens.id, token.id));
+					throw new Error('Expired token');
+				}
+
+				// verify token against secret
+				authTokenPayload = await verify(authToken, process.env.ACCESS_JWT_SECRET);
+
+				// find user in DB
+				const userRows = await db.select().from(users).where(eq(users.id, token.user_id));
+				const user = userRows[0];
+				if (!user) throw new Error('User not found');
+				c.set('user', user);
+				await next();
+			} catch (e) {
+				c.res = c.redirect('/login');
+				await next();
+			}
+		}),
+	);
 };

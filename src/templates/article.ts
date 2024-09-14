@@ -1,13 +1,11 @@
-import { html, raw } from 'hono/html';
-import xss from 'xss';
+import { html } from 'hono/html';
 
-import { generateCompleteHtml } from '../articleServices';
+import { generateCompleteHtml } from '../services/articleServices';
 import { SelectArticles } from '../../db/dev/schema';
 
 export default function articleHTML(article: SelectArticles) {
 	const articleHtml = generateCompleteHtml(article);
 
-	// raw(xss())
 	return html` <article class="prose prose-a:text-blue-600">${articleHtml}</article>
 		<button
 			hx-get="/"

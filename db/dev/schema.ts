@@ -10,7 +10,9 @@ export const users = sqliteTable('users', {
 
 export const articles = sqliteTable('articles', {
 	id: text('id').primaryKey().$default(createId),
-	user_id: text('user_id').references(() => users.id),
+	user_id: text('user_id')
+		.notNull()
+		.references(() => users.id),
 	author: text('author'),
 	content: text('content'),
 	date_published: text('date_published'),
@@ -29,7 +31,9 @@ export const articles = sqliteTable('articles', {
 
 export const tokens = sqliteTable('tokens', {
 	id: text('id').primaryKey().$default(createId),
-	user_id: text('user_id').references(() => users.id),
+	user_id: text('user_id')
+		.notNull()
+		.references(() => users.id),
 	token_type: text('token_type').notNull(),
 	token: text('token'),
 	valid: integer('valid').default(1),

@@ -21,7 +21,7 @@ export async function generateEmailToken() {
 }
 
 export function generateAccessJWTExpiration() {
-	const expiration = new Date(Math.floor((Date.now() + ACCESS_JWT_EXPIRATION_MINUTES * 60 * 1000) / 1000));
+	const expiration = new Date(Math.floor((Date.now() + ACCESS_JWT_EXPIRATION_MINUTES * 60 * 1000) / 1000) * 1000);
 	return expiration;
 }
 

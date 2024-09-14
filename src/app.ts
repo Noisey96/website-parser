@@ -1,41 +1,28 @@
 import 'dotenv/config';
 import { Hono } from 'hono';
-import { createClient } from '@libsql/client';
-import * as Sentry from '@sentry/node';
-import { libsqlIntegration } from 'sentry-integration-libsql-client';
 import { Resend } from 'resend';
 import { compress } from 'hono/compress';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { serve } from '@hono/node-server';
 import { z } from 'zod';
 import { compare } from 'bcrypt';
-import { drizzle } from 'drizzle-orm/libsql';
 import { eq, and, gte } from 'drizzle-orm';
+import { setCookie } from 'hono/cookie';
 
-import { generateCardHtml, parseArticle } from './articleServices.js';
+import { generateCardHtml, parseArticle } from './services/articleServices.js';
 import { rootHTML, mainMenuHTML, errorHTML } from './templates/common.js';
 import articleHTML from './templates/article.js';
 import parseUrlFormHTML from './templates/parseUrlForm.js';
 import loginFormHTML from './templates/loginForm.js';
 import { authenticator, logger } from './middlewares.js';
 import { articles, SelectArticles, users, tokens } from '../db/dev/schema.js';
-import { generateEmailToken, generateAccessJWT, generateAccessJWTExpiration } from './authServices.js';
+import { generateEmailToken, generateAccessJWT, generateAccessJWTExpiration } from './services/authServices.js';
 import validateLoginFormHTML from './templates/validateLoginForm.js';
 import dashboardHTML from './templates/dashboard.js';
+import { database } from './services/dbServices.js';
 
 // pre-app setup
-const dbClient = createClient({
-	url: process.env.TURSO_URL!,
-	authToken: process.env.TURSO_AUTH_TOKEN,
-});
-
-const db = drizzle(dbClient);
-
-Sentry.init({
-	dsn: process.env.SENTRY_DSN,
-	environment: process.env.ENVIRONMENT,
-	integrations: [libsqlIntegration(dbClient, Sentry)],
-});
+const db = database(true);
 
 const emailClient = new Resend(process.env.RESEND_API_KEY);
 
@@ -230,7 +217,7 @@ app.post('/login/validate', async (c) => {
 
 		const accessToken = await generateAccessJWT(tokenIds[0].id, expiration);
 
-		c.header('Authorization', 'Bearer ' + accessToken);
+		setCookie(c, 'access_token', accessToken);
 		c.header('HX-Redirect', '/');
 		return c.redirect('/');
 	} catch (e) {
@@ -239,8 +226,6 @@ app.post('/login/validate', async (c) => {
 		return c.html(html);
 	}
 });
-
-// TODO - GET request for dashboard page
 
 // app deploy
 serve({ fetch: app.fetch, port: Number(process.env.PORT) }, (info) => {

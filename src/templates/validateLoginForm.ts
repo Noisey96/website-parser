@@ -6,7 +6,7 @@ export default function validateLoginFormHTML(id: string, error?: string) {
 		<form
 			hx-post="/login/validate?id=${id}"
 			hx-target="this"
-			hx-swap=""
+			hx-swap="outerHTML"
 			class="text-md flex flex-col xs:text-lg"
 			novalidate
 		>

@@ -1,6 +1,6 @@
 CREATE TABLE `articles` (
 	`id` text PRIMARY KEY NOT NULL,
-	`user_id` text,
+	`user_id` text NOT NULL,
 	`author` text,
 	`content` text,
 	`date_published` text,
@@ -20,7 +20,7 @@ CREATE TABLE `articles` (
 --> statement-breakpoint
 CREATE TABLE `tokens` (
 	`id` text PRIMARY KEY NOT NULL,
-	`user_id` text,
+	`user_id` text NOT NULL,
 	`token_type` text NOT NULL,
 	`token` text,
 	`valid` integer DEFAULT 1,

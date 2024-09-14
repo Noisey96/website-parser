@@ -7,7 +7,8 @@ import { SelectArticles } from '../../db/dev/schema';
 export default function articleHTML(article: SelectArticles) {
 	const articleHtml = generateCompleteHtml(article);
 
-	return html` <article class="prose prose-a:text-blue-600">${raw(xss(articleHtml))}</article>
+	// raw(xss())
+	return html` <article class="prose prose-a:text-blue-600">${articleHtml}</article>
 		<button
 			hx-get="/"
 			hx-push-url="true"

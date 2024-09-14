@@ -13,9 +13,8 @@ import { drizzle } from 'drizzle-orm/libsql';
 import { eq, and, gte } from 'drizzle-orm';
 
 import { generateCardHtml, parseArticle } from './articleServices.js';
-import rootHTML from './templates/root.js';
+import { rootHTML, mainMenuHTML, errorHTML } from './templates/common.js';
 import articleHTML from './templates/article.js';
-import errorHTML from './templates/error.js';
 import parseUrlFormHTML from './templates/parseUrlForm.js';
 import loginFormHTML from './templates/loginForm.js';
 import { authenticator, logger } from './middlewares.js';
@@ -67,7 +66,7 @@ app.get('/', async (c) => {
 
 		const articleCardHtmls = articleRows.map((article) => generateCardHtml(article));
 
-		const html = rootHTML(dashboardHTML(articleCardHtmls));
+		const html = rootHTML(dashboardHTML(articleCardHtmls), mainMenuHTML());
 		return c.html(html);
 	} catch (_) {
 		const html = errorHTML('Failed to load articles');
@@ -75,7 +74,18 @@ app.get('/', async (c) => {
 	}
 });
 
-app.post('/', async (c) => {
+app.get('/article/new', (c) => {
+	try {
+		const html = rootHTML(parseUrlFormHTML());
+		return c.html(html);
+	} catch (_) {
+		const html = errorHTML('Failed to load form');
+		return c.html(html);
+	}
+});
+
+app.post('/article/new', async (c) => {
+	const user = c.get('user');
 	const body = await c.req.parseBody();
 	const url = body.url as string;
 	try {
@@ -86,7 +96,8 @@ app.post('/', async (c) => {
 	}
 
 	try {
-		const article = await parseArticle(url);
+		let article = await parseArticle(url);
+		article.user_id = user.id;
 		const ids = await db.insert(articles).values(article).returning({ id: articles.id });
 		return c.redirect('article/' + ids[0].id);
 	} catch (_) {
@@ -109,7 +120,7 @@ app.get('/article/:id', async (c) => {
 
 	try {
 		c.header('HX-Push-URL', '/article/' + id);
-		const html = articleHTML(article);
+		const html = rootHTML(articleHTML(article), mainMenuHTML());
 		return c.html(html);
 	} catch (_) {
 		const html = errorHTML('Failed to display content');

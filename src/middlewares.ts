@@ -53,8 +53,11 @@ export const authenticator = () => {
 				const user = userRows[0];
 				if (!user) throw new Error('User not found');
 				c.set('user', user);
+				c.get('sentry').setUser(user);
 				await next();
 			} catch (e) {
+				c.set('user', null);
+				c.get('sentry').setUser(null);
 				c.res = c.redirect('/login');
 				await next();
 			}

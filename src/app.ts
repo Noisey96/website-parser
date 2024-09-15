@@ -51,7 +51,6 @@ app.get('/', async (c) => {
 		const articleRows = await db.select().from(articles).where(eq(articles.user_id, user.id));
 
 		const articleCardHtmls = articleRows.map((article) => generateCardHtml(article));
-
 		const html = rootHTML(dashboardHTML(articleCardHtmls), mainMenuHTML());
 		return c.html(html);
 	} catch (_) {
@@ -151,13 +150,16 @@ app.post('/login', async (c) => {
 		z.string().email().parse(email);
 		z.string().parse(password);
 
+		// identify user
 		const rows = await db.select().from(users).where(eq(users.email, email));
 		const user = rows[0];
 		if (!user) throw new Error('Non-existent user');
 
+		// validate password
 		const passwordMatch = await compare(password, user.password);
 		if (!passwordMatch) throw new Error('Invalid password');
 
+		// generate email token
 		const emailToken = await generateEmailToken();
 		await db.insert(tokens).values({
 			user_id: user.id,
@@ -167,6 +169,7 @@ app.post('/login', async (c) => {
 			expiration: emailToken.expiration.toISOString(),
 		});
 
+		// send email with token
 		await emailClient.emails.send({
 			from: 'jlfreeman@freemanapps.org',
 			to: [email],
@@ -176,6 +179,7 @@ app.post('/login', async (c) => {
 
 		return c.redirect('login/validate?id=' + user.id);
 	} catch (e) {
+		c.get('sentry').captureException(e);
 		const html = loginFormHTML('Invalid user and/or password');
 		return c.html(html);
 	}
@@ -209,6 +213,7 @@ app.post('/login/validate', async (c) => {
 		z.string().cuid2().parse(id);
 		z.string().length(6).parse(passcode);
 
+		// identify valid email tokens for user
 		const now = new Date().toISOString();
 		const tokenRows = await db
 			.select()
@@ -222,9 +227,14 @@ app.post('/login/validate', async (c) => {
 				),
 			);
 
+		// validate passcode
 		const token = tokenRows.filter((t) => compare(t.token as string, passcode))[0];
 		if (!token) throw new Error('Non-existent passcode');
 
+		// invalidate email token
+		await db.update(tokens).set({ valid: 0 }).where(eq(tokens.id, token.id));
+
+		// generate access token
 		const expiration = generateAccessJWTExpiration();
 		const tokenIds = await db
 			.insert(tokens)
@@ -235,13 +245,13 @@ app.post('/login/validate', async (c) => {
 				expiration: expiration.toISOString(),
 			})
 			.returning({ id: tokens.id });
-
 		const accessToken = await generateAccessJWT(tokenIds[0].id, expiration);
 
 		setCookie(c, 'access_token', accessToken);
 		c.header('HX-Redirect', '/');
 		return c.redirect('/');
-	} catch (_) {
+	} catch (e) {
+		c.get('sentry').captureException(e);
 		const html = rootHTML(validateLoginFormHTML(id, 'Invalid passcode'));
 		return c.html(html);
 	}

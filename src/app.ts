@@ -23,27 +23,26 @@ import { database } from './services/dbServices.js';
 
 // pre-app setup
 const db = database(true);
-
 const emailClient = new Resend(process.env.RESEND_API_KEY);
 
+// app setup
 type Variables = {
 	user: { id: string };
 };
-
-// app setup
 const app = new Hono<{ Variables: Variables }>();
 
+// built-in middlewares
 app.use(compress({ encoding: 'gzip' }));
-
-app.use('*', logger());
-
 app.use('/robots.txt', serveStatic({ root: './', rewriteRequestPath: () => '/public/robots.txt' }));
 app.use('/public/*', serveStatic({ root: './' }));
 
+// custom middlewares
+app.use('*', logger());
 app.use('*', authenticator());
 
 // app routes
 app.notFound((c) => c.json({ message: 'Not Found', ok: false }, 404));
+app.onError((_, c) => c.json({ message: 'Internal Server Error', ok: false }, 500));
 
 app.get('/', async (c) => {
 	try {
@@ -56,17 +55,21 @@ app.get('/', async (c) => {
 		const html = rootHTML(dashboardHTML(articleCardHtmls), mainMenuHTML());
 		return c.html(html);
 	} catch (_) {
-		const html = errorHTML('Failed to load articles');
+		const html = rootHTML(errorHTML('Failed to load articles'), mainMenuHTML());
 		return c.html(html);
 	}
 });
 
 app.get('/article/new', (c) => {
+	c.header('HX-Push-URL', c.req.path);
+	let html;
 	try {
-		const html = rootHTML(parseUrlFormHTML());
+		if (c.req.header('HX-Request')) html = parseUrlFormHTML();
+		else html = rootHTML(parseUrlFormHTML(), mainMenuHTML());
 		return c.html(html);
 	} catch (_) {
-		const html = errorHTML('Failed to load form');
+		if (c.req.header('HX-Request')) html = errorHTML('Failed to load form');
+		else html = rootHTML(errorHTML('Failed to load form'), mainMenuHTML());
 		return c.html(html);
 	}
 });
@@ -78,7 +81,7 @@ app.post('/article/new', async (c) => {
 	try {
 		z.string().url().parse(url);
 	} catch (_) {
-		const html = errorHTML('Invalid URL');
+		const html = parseUrlFormHTML('Invalid URL');
 		return c.html(html);
 	}
 
@@ -88,15 +91,15 @@ app.post('/article/new', async (c) => {
 		const ids = await db.insert(articles).values(article).returning({ id: articles.id });
 		return c.redirect('article/' + ids[0].id);
 	} catch (_) {
-		const html = errorHTML('Failed to parse content');
+		const html = parseUrlFormHTML('Failed to parse content');
 		return c.html(html);
 	}
 });
 
 app.get('/article/:id', async (c) => {
-	const id = c.req.param('id');
 	let article: SelectArticles;
 	try {
+		const id = c.req.param('id');
 		z.string().cuid2().parse(id);
 		const rows = await db.select().from(articles).where(eq(articles.id, id));
 		article = rows[0];
@@ -105,13 +108,27 @@ app.get('/article/:id', async (c) => {
 		return c.notFound();
 	}
 
+	c.header('HX-Push-URL', c.req.path);
+	let html;
 	try {
-		c.header('HX-Push-URL', '/article/' + id);
-		const html = rootHTML(articleHTML(article), mainMenuHTML());
+		if (c.req.header('HX-Request')) html = articleHTML(article);
+		else html = rootHTML(articleHTML(article), mainMenuHTML());
 		return c.html(html);
 	} catch (_) {
-		const html = errorHTML('Failed to display content');
+		if (c.req.header('HX-Request')) html = errorHTML('Failed to display content');
+		else html = rootHTML(errorHTML('Failed to display content'), mainMenuHTML());
 		return c.html(html);
+	}
+});
+
+app.delete('/article/:id', async (c) => {
+	try {
+		const id = c.req.param('id');
+		z.string().cuid2().parse(id);
+		await db.delete(articles).where(eq(articles.id, id));
+		return c.redirect('/');
+	} catch (_) {
+		return c.redirect('/');
 	}
 });
 
@@ -120,7 +137,7 @@ app.get('/login', (c) => {
 		const html = rootHTML(loginFormHTML());
 		return c.html(html);
 	} catch (_) {
-		const html = errorHTML('Failed to display login form');
+		const html = rootHTML(errorHTML('Failed to display login form'));
 		return c.html(html);
 	}
 });
@@ -171,10 +188,14 @@ app.get('/login/validate', (c) => {
 		z.string().cuid2().parse(id);
 
 		c.header('HX-Push-URL', '/login/validate?id=' + id);
-		const html = validateLoginFormHTML(id);
+		let html;
+		if (c.req.header('HX-Request')) html = validateLoginFormHTML(id);
+		else html = rootHTML(validateLoginFormHTML(id));
 		return c.html(html);
 	} catch (_) {
-		const html = errorHTML('Invalid email');
+		let html;
+		if (c.req.header('HX-Request')) html = errorHTML('Failed to load form');
+		else html = rootHTML(errorHTML('Failed to load form'), mainMenuHTML());
 		return c.html(html);
 	}
 });
@@ -220,9 +241,8 @@ app.post('/login/validate', async (c) => {
 		setCookie(c, 'access_token', accessToken);
 		c.header('HX-Redirect', '/');
 		return c.redirect('/');
-	} catch (e) {
-		console.log(e);
-		const html = validateLoginFormHTML(id, 'Invalid passcode');
+	} catch (_) {
+		const html = rootHTML(validateLoginFormHTML(id, 'Invalid passcode'));
 		return c.html(html);
 	}
 });

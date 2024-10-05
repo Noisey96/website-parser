@@ -21,18 +21,6 @@ export async function parseArticle(url: string): Promise<InsertArticles> {
 }
 
 export function generateCompleteHtml(article: SelectArticles): HtmlEscapedString | Promise<HtmlEscapedString> {
-	// clean-up article's content
-	if (article.url?.startsWith('https://www.theatlantic.com')) {
-		if (article.content?.startsWith(`<p>${article.excerpt}</p>`)) {
-			article.content = article.content.replace(`<p>${article.excerpt}</p>\n`, '');
-		}
-		if (article.content?.startsWith(`<p><img`)) {
-			const imagePattern = new RegExp(`<p><img[^<]*?<\\/p>\n<p>[^<]*?<\\/p>\n<p>[^<]*?<\\/p>`);
-			article.content = article.content.replace(imagePattern, '');
-		}
-	}
-
-	// generate complete HTML for article
 	return html`<h2>${article.title}</h2>
 		${article.excerpt ? html`<em>${article.excerpt}</em>` : ''}
 		${article.author && article.date_published
@@ -47,12 +35,17 @@ export function generateCompleteHtml(article: SelectArticles): HtmlEscapedString
 }
 
 export function generateCardHtml(article: SelectArticles): HtmlEscapedString | Promise<HtmlEscapedString> {
-	return html`<a href="/article/${article.id}">
-		${
-			article.lead_image_url
+	return html`<div class="w-[calc(100%_/_3_-_(theme(gap.2)_*_2_/_3))]">
+		<button
+			hx-get="/article/${article.id}"
+			hx-push-url="true"
+			hx-target="#content"
+			class="rounded border border-black bg-slate-500 p-2 text-white hover:bg-slate-600 hover:text-white active:bg-slate-700"
+		>
+			${article.lead_image_url
 				? html`<img src="${article.lead_image_url}" alt="${article.lead_image_url}" />`
-				: html`<img src="/public/image-not-found.jpg" alt="Image not found" />`
-		}
+				: html`<img src="/public/image-not-found.jpg" alt="Image not found" />`}
 			<h2>${article.title}</h2>
+		</button>
 	</div>`;
 }

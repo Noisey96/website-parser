@@ -60,7 +60,6 @@ app.get('/', async (c) => {
 });
 
 app.get('/article/new', (c) => {
-	c.header('HX-Push-URL', c.req.path);
 	let html;
 	try {
 		if (c.req.header('HX-Request')) html = parseUrlFormHTML();
@@ -102,13 +101,11 @@ app.get('/article/:id', async (c) => {
 		z.string().cuid2().parse(id);
 		const rows = await db.select().from(articles).where(eq(articles.id, id));
 		article = rows[0];
-		console.log(article);
 		if (!article) throw new Error('Article not found');
 	} catch (_) {
 		return c.notFound();
 	}
 
-	c.header('HX-Push-URL', c.req.path);
 	let html;
 	try {
 		if (c.req.header('HX-Request')) html = articleHTML(article);
@@ -192,7 +189,6 @@ app.get('/login/validate', (c) => {
 
 		z.string().cuid2().parse(id);
 
-		c.header('HX-Push-URL', '/login/validate?id=' + id);
 		let html;
 		if (c.req.header('HX-Request')) html = validateLoginFormHTML(id);
 		else html = rootHTML(validateLoginFormHTML(id));

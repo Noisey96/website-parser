@@ -1,10 +1,10 @@
 import { html } from 'hono/html';
 
 export default function validateLoginFormHTML(id: string, error?: string) {
-	return html`<div class="m-2 flex flex-col rounded bg-white p-4">
-		<h1 class="p-1 text-center font-title text-4xl font-bold text-green-700 xs:text-5xl">Website Parser</h1>
+	return html`<h1 class="p-1 text-center font-title text-4xl font-bold text-green-700 xs:text-5xl">Website Parser</h1>
 		<form
 			hx-post="/login/validate?id=${id}"
+			hx-push-url="true"
 			hx-target="closest div"
 			hx-swap="outerHTML"
 			class="text-md flex flex-col xs:text-lg"
@@ -49,6 +49,5 @@ export default function validateLoginFormHTML(id: string, error?: string) {
 					else if (button) button.disabled = true;
 				});
 			</script>
-		</form>
-	</div>`;
+		</form>`;
 }

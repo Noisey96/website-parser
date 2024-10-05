@@ -6,11 +6,11 @@ export default function dashboardHTML(articleCardHtmls: (HtmlEscapedString | Pro
 		<button
 			hx-get="/article/new"
 			hx-push-url="true"
-			hx-target="closest div"
-			class="mt-2 max-w-max rounded bg-green-500 p-2 text-white hover:bg-green-600 active:bg-green-700"
+			hx-target="#content"
+			class="rounded bg-green-500 p-2 text-white hover:bg-green-600 active:bg-green-700"
 		>
 			Add
 		</button>
-		<div>${raw(articleCardHtmls.join(''))}</div>
+		<div class="flex flex-wrap gap-2">${raw(articleCardHtmls.join(''))}</div>
 	</div>`;
 }

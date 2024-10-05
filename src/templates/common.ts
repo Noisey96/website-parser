@@ -21,16 +21,18 @@ export function rootHTML(
 				<link rel="stylesheet" href="/public/app.css" />
 				<link rel="icon" href="/public/favicon.ico" />
 			</head>
-			<body hx-ext="loading-states" class="bg-gray-300 font-body">
+			<body hx-ext="loading-states" class="bg-slate-300 font-body">
 				${menuHTML}
-				<div class="flex flex-col items-center justify-center">${pageHTML}</div>
+				<div id="content" class="m-2 flex max-w-max flex-col items-center justify-center rounded bg-white p-4">
+					${pageHTML}
+				</div>
 			</body>
 		</html>`;
 }
 
 export function mainMenuHTML() {
 	return html`<div hx-boost="true">
-		<a class="flex flex-row" href="/"><img src="/public/favicon.ico" alt="Logo" /></a>
+		<a class="m-2 flex flex-row" href="/"><img src="/public/favicon.ico" alt="Logo" /></a>
 	</div>`;
 }
 

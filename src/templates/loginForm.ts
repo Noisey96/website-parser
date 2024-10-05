@@ -1,9 +1,15 @@
 import { html } from 'hono/html';
 
 export default function loginFormHTML(error?: string) {
-	return html`<div class="m-2 flex flex-col rounded bg-white p-4">
-		<h1 class="p-1 text-center font-title text-4xl font-bold text-green-700 xs:text-5xl">Website Parser</h1>
-		<form hx-post="/login" hx-target="closest div" hx-swap="outerHTML" class="text-md flex flex-col xs:text-lg" novalidate>
+	return html`<h1 class="p-1 text-center font-title text-4xl font-bold text-green-700 xs:text-5xl">Website Parser</h1>
+		<form
+			hx-post="/login"
+			hx-push-url="true"
+			hx-target="closest div"
+			hx-swap="innerHTML"
+			class="text-md flex flex-col xs:text-lg"
+			novalidate
+		>
 			<label for="email" class="mb-2">Email</label>
 			<input
 				type="email"
@@ -45,6 +51,5 @@ export default function loginFormHTML(error?: string) {
 					else if (button) button.disabled = true;
 				});
 			</script>
-		</form>
-	</div>`;
+		</form>`;
 }

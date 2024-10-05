@@ -88,7 +88,7 @@ app.post('/article/new', async (c) => {
 		let article = await parseArticle(url);
 		article.user_id = user.id;
 		const ids = await db.insert(articles).values(article).returning({ id: articles.id });
-		return c.redirect('article/' + ids[0].id);
+		return c.redirect(ids[0].id);
 	} catch (_) {
 		const html = parseUrlFormHTML('Failed to parse content');
 		return c.html(html);
@@ -102,6 +102,7 @@ app.get('/article/:id', async (c) => {
 		z.string().cuid2().parse(id);
 		const rows = await db.select().from(articles).where(eq(articles.id, id));
 		article = rows[0];
+		console.log(article);
 		if (!article) throw new Error('Article not found');
 	} catch (_) {
 		return c.notFound();
@@ -228,7 +229,11 @@ app.post('/login/validate', async (c) => {
 			);
 
 		// validate passcode
-		const token = tokenRows.filter((t) => compare(t.token as string, passcode))[0];
+		const token = (
+			await Promise.all(
+				tokenRows.map(async (t) => ({ value: t, include: await compare(passcode, t.token as string) })),
+			)
+		).filter((t) => t.include)[0].value;
 		if (!token) throw new Error('Non-existent passcode');
 
 		// invalidate email token

@@ -5,7 +5,7 @@ export default function validateLoginFormHTML(id: string, error?: string) {
 		<h1 class="p-1 text-center font-title text-4xl font-bold text-green-700 xs:text-5xl">Website Parser</h1>
 		<form
 			hx-post="/login/validate?id=${id}"
-			hx-target="this"
+			hx-target="closest div"
 			hx-swap="outerHTML"
 			class="text-md flex flex-col xs:text-lg"
 			novalidate
